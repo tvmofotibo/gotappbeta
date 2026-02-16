@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">GotAppBeta</string>
+    <string name="title_activity_main">GotAppBeta</string>
+    <string name="package_name">com.gotapp.beta</string>
+    <string name="custom_url_scheme">com.gotapp.beta</string>
+</resources>
