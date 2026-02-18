@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Teste Câmera e Microfone</title>
+<title>Teste Câmera, Microfone e Notificação</title>
 
 <style>
 body {
@@ -19,6 +19,7 @@ video {
     max-width: 400px;
     border-radius: 10px;
     margin-top: 15px;
+    background: black;
 }
 
 button {
@@ -39,14 +40,15 @@ button:hover {
 
 <body>
 
-<h2>Teste de Gravação 🎥🎤</h2>
+<h2>Teste 🎥🎤🔔</h2>
 
-<video id="preview" autoplay muted playsinline></video>
+<video id="preview" autoplay playsinline></video>
 <br>
 
 <button onclick="iniciar()">Iniciar Câmera</button>
 <button onclick="gravar()">Gravar</button>
 <button onclick="parar()">Parar</button>
+<button onclick="enviarNotificacao()">Testar Notificação</button>
 
 <h3>Reprodução:</h3>
 <video id="playback" controls></video>
@@ -56,21 +58,25 @@ let stream;
 let mediaRecorder;
 let chunks = [];
 
+// Iniciar câmera e microfone
 async function iniciar() {
     try {
         stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
+            video: { facingMode: "user" },
             audio: true
         });
 
-        document.getElementById("preview").srcObject = stream;
+        const preview = document.getElementById("preview");
+        preview.srcObject = stream;
+        await preview.play();
 
     } catch (err) {
-        alert("Erro ao acessar câmera/microfone: " + err);
+        alert("Erro ao acessar câmera/microfone: " + err.message);
         console.error(err);
     }
 }
 
+// Gravar
 function gravar() {
     if (!stream) {
         alert("Inicie a câmera primeiro!");
@@ -96,14 +102,33 @@ function gravar() {
     alert("Gravando...");
 }
 
+// Parar gravação
 function parar() {
-    if (mediaRecorder) {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
         mediaRecorder.stop();
         alert("Gravação parada.");
+    }
+}
+
+// Notificação
+async function enviarNotificacao() {
+    if (!("Notification" in window)) {
+        alert("Notificações não suportadas nesse dispositivo.");
+        return;
+    }
+
+    let permissao = await Notification.requestPermission();
+
+    if (permissao === "granted") {
+        new Notification("🚀 GotApp", {
+            body: "Notificação funcionando!",
+            icon: ""
+        });
+    } else {
+        alert("Permissão de notificação negada.");
     }
 }
 </script>
 
 </body>
 </html>
-
