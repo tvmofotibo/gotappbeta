@@ -3,80 +3,105 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GotApp com Clerk Auth</title>
+<title>Teste Câmera e Microfone</title>
 
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #000;
-        color: #fff;
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        padding-top: 40px;
-    }
-    #app {
-        width: 100%;
-        max-width: 400px;
-        text-align: center;
-    }
-    button {
-        padding: 10px 20px;
-        background: #8A2BE2;
-        border: none;
-        border-radius: 8px;
-        color: #fff;
-        cursor: pointer;
-        margin-top: 20px;
-    }
+body {
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+video {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 10px;
+    margin-top: 15px;
+}
+
+button {
+    padding: 12px 20px;
+    margin: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #00ff88;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #00cc6a;
+}
 </style>
-
-<!-- Clerk JS (SDK) -->
-<script
-    async
-    crossorigin="anonymous"
-    data-clerk-publishable-key="pk_test_dG9sZXJhbnQtb3NwcmV5LTE1LmNsZXJrLmFjY291bnRzLmRldiQ"
-    src="https://clerk.clerkjs.com/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
-></script>
-
 </head>
+
 <body>
 
-<div id="app"></div>
+<h2>Teste de Gravação 🎥🎤</h2>
+
+<video id="preview" autoplay muted playsinline></video>
+<br>
+
+<button onclick="iniciar()">Iniciar Câmera</button>
+<button onclick="gravar()">Gravar</button>
+<button onclick="parar()">Parar</button>
+
+<h3>Reprodução:</h3>
+<video id="playback" controls></video>
 
 <script>
-window.addEventListener("load", async function () {
+let stream;
+let mediaRecorder;
+let chunks = [];
 
-  // Carrega o Clerk JS
-  await Clerk.load();
+async function iniciar() {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true
+        });
 
-  const app = document.getElementById("app");
+        document.getElementById("preview").srcObject = stream;
 
-  if (Clerk.isSignedIn) {
-    // Usuário já autenticado
-    const user = Clerk.session.user;
-    app.innerHTML = `
-      <h2>Bem-vindo, ${user.firstName || user.primaryEmailAddress.emailAddress} 👋</h2>
-      <button id="logoutBtn">Sair</button>
-    `;
+    } catch (err) {
+        alert("Erro ao acessar câmera/microfone: " + err);
+        console.error(err);
+    }
+}
 
-    document.getElementById("logoutBtn").onclick = async () => {
-      await Clerk.signOut();
-      location.reload();
+function gravar() {
+    if (!stream) {
+        alert("Inicie a câmera primeiro!");
+        return;
+    }
+
+    chunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+
+    mediaRecorder.ondataavailable = e => {
+        if (e.data.size > 0) {
+            chunks.push(e.data);
+        }
     };
 
-    // Token de sessão para backend se precisar
-    const token = await Clerk.session.getToken();
-    console.log("Session token:", token);
+    mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: "video/webm" });
+        const url = URL.createObjectURL(blob);
+        document.getElementById("playback").src = url;
+    };
 
-  } else {
-    // Usuário não está logado → mostra UI de login/clerk
-    app.innerHTML = `<div id="sign-in-container"></div>`;
+    mediaRecorder.start();
+    alert("Gravando...");
+}
 
-    Clerk.mountSignIn(document.getElementById("sign-in-container"));
-  }
-
-});
+function parar() {
+    if (mediaRecorder) {
+        mediaRecorder.stop();
+        alert("Gravação parada.");
+    }
+}
 </script>
 
 </body>
